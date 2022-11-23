@@ -1,0 +1,22 @@
+galaxy_info:
+  role_name: k3d
+  namespace: averagebit
+  author: averagebit <averagebit@pm.me>
+  description: Ansible role to install k3d.
+  license: Apache-2.0
+  issue_tracker_url: https://github.com/averagebit/ansible-role-k3d/issues
+  min_ansible_version: "2.9"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+
+  galaxy_tags:
+    - k3d
+    - k3s
+    - k8s
+    - kubernetes
+    - docker
+
+dependencies: []

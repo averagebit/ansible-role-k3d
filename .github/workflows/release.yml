@@ -1,0 +1,24 @@
+name: Release
+
+on:
+  release:
+    types: [edited, released]
+
+defaults:
+  run:
+    working-directory: averagebit.k3d
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: averagebit.k3d
+
+      - name: Push
+        uses: averagebit/action-galaxy@1.0.0
+        with:
+          galaxy_token: ${{ secrets.galaxy_token }}

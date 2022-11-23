@@ -1,0 +1,60 @@
+---
+- name: Check if binary exists
+  ansible.builtin.stat:
+    path: "{{ k3d_bin_path }}"
+  register: k3d_bin
+
+- name: Get current version
+  ansible.builtin.command: "{{ k3d_bin_path }} version"
+  failed_when: false
+  changed_when: false
+  register: k3d_current_version
+
+- name: Get latest version
+  block:
+    - name: Get latest version
+      ansible.builtin.uri:
+        url: "{{ k3d_version_url }}"
+        return_content: true
+        body_format: json
+      register: k3d_latest_version
+
+    - name: Set latest version fact
+      ansible.builtin.set_fact:
+        k3d_version: "{{ k3d_latest_version.json.tag_name | regex_replace('^v', '') }}"
+  when: k3d_version == "latest"
+
+- name: Download file
+  block:
+    - name: Ensure bin directory exists
+      ansible.builtin.file:
+        path: "{{ k3d_bin_dir }}"
+        owner: "{{ k3d_owner }}"
+        group: "{{ k3d_group }}"
+        mode: "{{ k3d_bin_dir_mode }}"
+        state: directory
+
+    - name: Download file
+      ansible.builtin.get_url:
+        url: "{{ k3d_file_url }}"
+        dest: "{{ k3d_bin_path }}"
+        # checksum: "sha256:{{ k3d_checksum_url }}"
+        owner: "{{ k3d_owner }}"
+        group: "{{ k3d_group }}"
+        mode: "{{ k3d_mode }}"
+        force: true
+      register: k3d_download
+  when: >
+    not k3d_bin.stat.exists
+    or k3d_version not in k3d_current_version.stdout
+
+- name: Create symlink
+  ansible.builtin.file:
+    src: "{{ k3d_bin_path }}"
+    dest: "{{ k3d_link_path }}"
+    owner: "{{ k3d_owner }}"
+    group: "{{ k3d_group }}"
+    mode: "{{ k3d_mode }}"
+    force: true
+    state: link
+  when: k3d_download is changed
